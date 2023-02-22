@@ -1,0 +1,1700 @@
+.ORIG X3000 ;MAIN
+ 
+AND R0 R0 #0	; pointer to Matrix_Machine_Allocator
+AND R1 R1 #0	; pointer to Production_Matrix
+AND R2 R2 #0	; pointer to Matrix_Machine_Allocator
+AND R3 R3 #0	; Closing hour
+AND R4 R4 #0	;
+AND R5 R5 #0	; 
+ 
+LEA R0 WELCOME_MES
+PUTS
+LD R0 New_Line_Sign	; R0="\n " in ASCII
+OUT
+
+;Sub WorkHours
+JSR WorkHours
+ADD R3 R0 #0
+
+;Sub MachineAllocator
+LD R0 Pointer_Matrix_Machine_Allocator
+JSR MachineAllocator
+
+;Sub Daily_Production 
+LD R1 Pointer_Production_Matrix
+LD R2 Pointer_Matrix_Machine_Allocator
+JSR Daily_Production ;  Gets: R1=Pointer to Production_Matrix,R2=Pointer to MACHINES_MATRIX, R3=closing hour 
+
+;Sub Median
+AND R2 R2 #0	; Mechine for median
+AND R3 R3 #0	; Start hour
+AND R4 R4 #0	; Closing hour
+LD R0 New_Line_Sign	; R0="\n " in ASCII
+OUT
+LD R1 Pointer_Production_Matrix
+LEA R0 ENTER_MEDIAN_MES
+PUTS
+ 
+LD R0 Pointer_MatrixNum
+JSRR R0
+ADD R2 R0 #0	; Mechine for median
+ 
+LD R0 Pointer_MatrixNum
+JSRR R0
+ADD R5 R0 #0	; Start hour
+ 
+LD R0 Pointer_MatrixNum
+JSRR R0
+ADD R4 R0 #0	; Closing hour
+ADD R3 R5 #0
+LD R5 Pointer_Median 
+JSRR R5
+ADD R5 R0 #0
+LEA R0 MEDIAN_MES
+PUTS
+ADD R0 R5 #0
+LD R5 Pointer_PrintNum
+JSRR R5		; Printing the median
+ 
+;Reset Matrix_Machine_Allocator
+LD R1 Pointer_Matrix_Machine_Allocator
+AND R2 R2 #0	; Rows 	
+AND R3 R3 #0	; Cols
+ADD R2 R2 #3
+ADD R3 R3 #2	
+LD R0 Pointer_Reset_Matrix
+JSRR R0
+ 
+;Reset Production_Matrix
+LD R1 Pointer_Production_Matrix
+AND R2 R2 #0	; Rows 	
+AND R3 R3 #0	; Cols
+ADD R2 R2 #10
+LD R3 TwentyFour	
+LD R0 Pointer_Reset_Matrix
+JSRR R0
+ 
+HALT
+ENTER_MEDIAN_MES .stringz "For median production check, please enter machine and hours range: "
+WELCOME_MES .stringz "~~~ Welcome to KeTeR factory ~~~"
+MEDIAN_MES .stringz "The median production is "
+Pointer_Matrix_Machine_Allocator .fill Matrix_Machine_Allocator
+Pointer_Production_Matrix .fill Production_Matrix
+Pointer_Median .fill Median
+Pointer_GetNum .fill GetNum
+Pointer_MatrixNum .fill MatrixNum
+Pointer_PrintNum .fill PrintNum
+Pointer_Reset_Matrix .filL Reset_Matrix
+New_Line_Sign .fill #10
+TwentyFour .fill #24
+ 
+;*********************************************;
+R1_SAVE_WorkHours .fill #0 
+R7_SAVE_WorkHours .fill #0 
+Minus_TwentyThree .fill #-23
+ENTER_CLOUSING_HOUR_MES .stringz "Please enter closing hour: "
+ERROR_MES .stringz "Error, illegal hour!"
+ 
+WorkHours: ; return R0=Close hour
+ 
+ST R1 R1_SAVE_WorkHours 
+ST R7 R7_SAVE_WorkHours 
+ 
+AND R0 R0 #0 ; Close hour
+AND R1 R1 #0 ; Temp
+ 
+WHILE_WORK_HOURS:
+	LEA R0 ENTER_CLOUSING_HOUR_MES
+	PUTS
+	LD R0 Pointer_GetNum
+	JSRR R0
+ 
+	ADD R1 R0 #-8
+	BRz INVALID_INPUT
+	ADD R1 R0 #0
+	BRn INVALID_INPUT
+	LD R1 Minus_TwentyThree
+	ADD R1 R0 R1
+	BRp INVALID_INPUT
+	BR END_WORK_HOURS
+ 
+	INVALID_INPUT:
+	LEA R0 ERROR_MES
+	PUTS
+	LD R0 New_Line_Sign
+	OUT 
+	BR WHILE_WORK_HOURS
+ 
+END_WORK_HOURS: 
+LD R1 R1_SAVE_WorkHours 
+LD R7 R7_SAVE_WorkHours
+ 
+RET
+ 
+ 
+;********************************************************************;
+MACHINES_CHAIRS_MES .stringz "Please enter machines for chairs: "
+MACHINES_TABELS_MES .stringz "Please enter machines for tables: "
+MACHINES_CLOSETS_MES .stringz "Please enter machines for closets: "
+DOUBLE_ALLOCATE_MES .stringz "Error, one or more machines allocated more than once."
+NON_SEQUENTIAL_MES .stringz "Error, product allocated in non-sequential machines."
+Minus_Space_MachineAllocator .fill #-32
+MinusZeroAscii_MachineAllocator .fill #-48 
+R0_SAVE_MachineAllocator .fill #0 
+R1_SAVE_MachineAllocator .fill #0 
+R2_SAVE_MachineAllocator .fill #0
+R3_SAVE_MachineAllocator .fill #0
+R4_SAVE_MachineAllocator .fill #0
+R5_SAVE_MachineAllocator .fill #0
+R6_SAVE_MachineAllocator .fill #0
+R7_SAVE_MachineAllocator .fill #0
+ 
+MachineAllocator: ; Return R0=Pointer to Matrix_Machine_Allocator
+ST R0 R0_SAVE_MachineAllocator
+ST R1 R1_SAVE_MachineAllocator 
+ST R2 R2_SAVE_MachineAllocator
+ST R3 R3_SAVE_MachineAllocator 
+ST R4 R4_SAVE_MachineAllocator
+ST R5 R5_SAVE_MachineAllocator
+ST R6 R6_SAVE_MachineAllocator
+ST R7 R7_SAVE_MachineAllocator
+ 
+AND R1 R1 #0 ; Rows counter
+AND R2 R2 #0 ; Cols counter
+AND R3 R3 #0 ; Input from user
+AND R4 R4 #0 ; Flag
+AND R5 R5 #0 ; Temp
+AND R6 R6 #0 ; Pointer to Matrix
+ 
+ADD R6 R6 R0
+ 
+FOR_ROWS:
+		;Print user insruction:
+		ADD R1 R1 #0			; if((row)R1==0)
+		BRz PRINT_CHAIRS		
+		ADD R5 R1 #-1			; if((row)R1==1)	
+		BRz PRINT_TABELS
+		BR PRINT_CLOSETS		; if((row)R1==2)	
+ 
+		PRINT_CHAIRS:
+			LEA R0 MACHINES_CHAIRS_MES
+			PUTS
+			BR FOR_COLS
+		PRINT_TABELS: 
+			LEA R0 MACHINES_TABELS_MES
+			PUTS
+			BR FOR_COLS
+		PRINT_CLOSETS:
+			LEA R0 MACHINES_CLOSETS_MES
+			PUTS
+			BR FOR_COLS
+ 
+		FOR_COLS:
+				ADD R2 R2 #0		;if((col)R2 == 0)
+				BRz COL_0
+ 
+				;Else (col)R2=1
+				WHILE_MACHINE_ALLOCATOR:
+					GETC
+					OUT
+					ADD R3 R0 #0	; R3=GETC
+					;Check if (R3 == ‘\n’ || R3 == ' ')
+					ADD R5 R3 #-10 	
+					BRz CHECK_FLAFS		; if(R3 == ‘\n’)
+					LD R5 Minus_Space_MachineAllocator
+					ADD R5 R3 R5
+					BRz WHILE_MACHINE_ALLOCATOR		; if(R3 == ' ')
+ 
+				;Chaging R3 to be a number between 0-9
+				LD R5 MinusZeroAscii_MachineAllocator ; R5=-48
+				ADD R3 R3 R5 	; R3=R3-R5 -> 0<=R3<=9
+ 
+				ADD R0 R6 #0			  ; R0=Pointer to Matrix
+				ADD R4 R4 #0
+				BRnp INSERT_INPUT_COL1
+				JSR Check_Double_Allocate ; Gets:(R0,R3(input),R1(row)) ,Return:R4=flag{0,1}
+				ADD R4 R4 #0
+				BRp INSERT_INPUT_COL1
+				JSR Check_Sequance_Allocate ; Gets:(R0,R3(input),R1(row)) ,Return:R4=flag{0,-1}	
+ 
+				INSERT_INPUT_COL1:;CALC R5=M[row][col] = R0 + (col=R2) + (cols in matrix=2)*(row=R1)
+				ADD R5 R6 R2		; R5 = address of matrix + col=R2
+				ADD R5 R5 R1		
+				ADD R5 R5 R1		; R5 hold the adrees to M[col=R2][row=R1] = address to matrix + (cols in matrix=2)*(row=R1)
+				STR R3 R5 #0		; M[row=R1][col=R2] = R3
+ 
+				BR WHILE_MACHINE_ALLOCATOR
+ 
+				COL_0:
+					GETC
+					OUT
+ 
+					ADD R3 R0 #0
+					ADD R3 R3 #-10 ; if(R3 == ' ')->Countinue to the next Row
+					BRz FOR_ROWS_COUNTER	
+ 
+					;Chaging R3 to be a number between 0-9
+					ADD R3 R0 #0	; R3=GETC
+					LD R5 MinusZeroAscii_MachineAllocator ; R5=-48
+					ADD R3 R3 R5 	; R3=R3-R5 -> 0<=R3<=9
+ 
+					ADD R5 R1 #0	; if(R1=row>0)-> need to check if input is valid ,Else: insert to the Matrix
+					BRz INSERT_INPUT
+ 
+					ADD R0 R6 #0			  ; R0=Pointer to Matrix
+					JSR Check_Double_Allocate ; Gets:(R0,R3(input),R1(row)) ,Return:R4=flag{0,1}
+ 
+					;JSR Check_Sequance_Allocate ; Gets:(R0,R3(???),R1(row)) ,Return:R4=flag{0,-1}
+					;ADD R4 R4 #0
+					;BRn NON_SEQUENTIAL_INPUT
+ 
+					INSERT_INPUT:
+					;CALC R5=M[row][col] = R0 + (col=R2=0) + (cols in matrix=2)*(row=R1)
+					ADD R5 R6 R2		; R5 = address of matrix + col=R2
+					ADD R5 R5 R1
+					ADD R5 R5 R1		; R5 hold the adrees to M[col=R2=0][row=R1] = address to matrix + (cols in matrix=2)*(row=R1)
+					STR R3 R5 #0		; M[row][col=0]=R3
+					ADD R5 R5 #1		; R5 =	M[row][col=1]	
+					STR R3 R5 #0		; M[row][col=1] = R3
+ 
+					BR FOR_COLS_COUNTER
+ 
+				CHECK_FLAFS:
+				ADD R4 R4 #0
+				BRz FOR_COLS_COUNTER
+				BRn NON_SEQUENTIAL_INPUT 
+ 
+				;DOUBLE_ALLOCATE_INPUT:		; if(flag == 1)
+				LEA R0 DOUBLE_ALLOCATE_MES
+				PUTS
+				AND R0 R0 #0
+				ADD R0 R0 #10
+				OUT
+				BR RESET_REG
+ 
+				NON_SEQUENTIAL_INPUT: 		; if(flag==-1)
+				LEA R0 NON_SEQUENTIAL_MES
+				PUTS
+				AND R0 R0 #0
+				ADD R0 R0 #10
+				OUT
+ 
+				RESET_REG:
+				AND R2 R2 #0 ; Cols counter
+				AND R3 R3 #0 ; User input
+				AND R4 R4 #0 ; Flag
+				AND R5 R5 #0 ; Temp
+ 
+				RESET_ROW_IN_MATRIX:
+				ADD R3 R3 #-1
+				ADD R5 R6 R2
+				ADD R5 R5 R1
+				ADD R5 R5 R1
+				STR R3 R5 #0		; M[row][col=0]=R3=-1
+				ADD R5 R5 #1				
+				STR R3 R5 #0		; R0[row][col=col+1]=R3=-1
+ 
+				BR FOR_ROWS	 ; Continue filling the matrix from the row we stoped
+ 
+				FOR_COLS_COUNTER:
+				ADD R2 R2 #1 	;R2++
+				ADD R5 R2 #-2 	; if (R2=2) -> continue to the next row with FOR_ROWS
+				BRz FOR_ROWS_COUNTER
+				BR FOR_COLS		;  if (R2<2) -> continue to the next col with FOR_COLS
+ 
+		FOR_ROWS_COUNTER:
+		AND R2 R2 #0	; R2=col=0 reset col counter for the next row
+		ADD R1 R1 #1 	; R1++
+		ADD R5 R1 #-3 	; if (R1=3) -> Finished filling the matrix so continue to END_MachineAllocator
+		BRz END_MACHINE_ALLOCATOR
+		BR FOR_ROWS		; if (R1<3) -> Continue to the next col with FOR_COLS
+ 
+END_MACHINE_ALLOCATOR:
+LD R1 R1_SAVE_MachineAllocator 
+LD R2 R2_SAVE_MachineAllocator
+LD R3 R3_SAVE_MachineAllocator 
+LD R4 R4_SAVE_MachineAllocator
+LD R5 R5_SAVE_MachineAllocator
+LD R6 R6_SAVE_MachineAllocator
+LD R7 R7_SAVE_MachineAllocator
+ 
+RET
+ 
+;*********************************************;
+R2_SAVE_CHECK_DOUBLE_ALLOCATE .fill #0
+R5_SAVE_CHECK_DOUBLE_ALLOCATE .fill #0
+R6_SAVE_CHECK_DOUBLE_ALLOCATE .fill #0
+R7_SAVE_CHECK_DOUBLE_ALLOCATE .fill #0
+ 
+Check_Double_Allocate:			; Gets:(R0,R3(input),R1(row)) Return:R4=flag
+ST R2 R2_SAVE_CHECK_DOUBLE_ALLOCATE
+ST R5 R5_SAVE_CHECK_DOUBLE_ALLOCATE
+ST R6 R6_SAVE_CHECK_DOUBLE_ALLOCATE
+ST R7 R7_SAVE_CHECK_DOUBLE_ALLOCATE
+ 
+AND R2 R2 #0 ; Rows counter
+AND R5 R5 #0 ; Temp
+AND R6 R6 #0 ; -R3
+ 
+NOT R6 R3
+ADD R6 R6 #1  ;R6=-R3
+ 
+FOR:
+	; If(R0[i][0] == R3)
+	;CALC R5=M[R2][0] = R0 + [col=0] + [[cols in matrix=2] * [row=R2]]
+	ADD R5 R0 #0
+	ADD R5 R5 R2
+	ADD R5 R5 R2
+	LDR R5 R5 #0			; R5=M[R2][0]
+	BRn FOR_COUNTER			; if(M[R2][0]<0) it mean that M[R2][0]=-1 so we didn't enter value to the cell
+	ADD R5 R5 R6			; R5-R3 = M[R2][0]-R3
+	BRz TURN_ON_FLAG		; if(R0[i][0] == R3)-> Flag = 1 
+ 
+	; Else if (R0[i][1] == R3)
+	;CALC R5=M[R2][1] = R0 + [col=1] + [[cols in matrix=2] * [row=R2]]
+	ADD R5 R0 #1
+	ADD R5 R5 R2
+	ADD R5 R5 R2
+	LDR R5 R5 #0			; R5=M[R2][2]
+	ADD R5 R5 R6			; R5-R3= M[R2][1]-R3
+	BRz TURN_ON_FLAG		; if(R0[i][1] == R3)-> Flag = 1
+ 
+	;Else if(R0[i][0]< R3 && R3< R0[i][1]) 
+	ADD R5 R0 #0
+	ADD R5 R5 R2
+	ADD R5 R5 R2
+	LDR R5 R5 #0			; R5=M[R2][0]
+	ADD R5 R5 R6			; R5-R3= M[R2][0]-R3
+	BRzp FOR_COUNTER 		; if(R0[i][0] >= R3)-> Continue to the next row
+	ADD R5 R0 #1
+	ADD R5 R5 R2
+	ADD R5 R5 R2
+	LDR R5 R5 #0			; R5=M[R2][1]
+	ADD R5 R5 R6			; R5-R3= M[R2][1]-R3
+	BRnz FOR_COUNTER 		; if(R3 <= R0[i][1])-> Continue to the next row
+ 
+	TURN_ON_FLAG:
+	ADD R4 R4 #1			; Flag=1
+	BR END_CHECK_DOUBLE_ALLOCATE
+ 
+	FOR_COUNTER:
+	ADD R2 R2 #1
+	NOT R5 R1	
+	ADD R5 R5 #1			; R5=-R1
+	ADD R5 R2 R5			; If(R2-R1<=0) -> Continue in the FOR ,Else:END_MachineAllocator
+	BRnz FOR
+ 
+ 
+END_CHECK_DOUBLE_ALLOCATE:
+LD R2 R2_SAVE_CHECK_DOUBLE_ALLOCATE
+LD R5 R5_SAVE_CHECK_DOUBLE_ALLOCATE
+LD R6 R6_SAVE_CHECK_DOUBLE_ALLOCATE
+LD R7 R7_SAVE_CHECK_DOUBLE_ALLOCATE
+ 
+RET
+ 
+;*********************************************;
+R2_SAVE_CHECK_SEQUANCE_ALLOCATE .fill #0
+R5_SAVE_CHECK_SEQUANCE_ALLOCATE .fill #0
+R7_SAVE_CHECK_SEQUANCE_ALLOCATE .fill #0
+ 
+Check_Sequance_Allocate:			; Gets:(R0,R3(input),R1(row)) Return:R4=flag
+ST R2 R2_SAVE_CHECK_SEQUANCE_ALLOCATE
+ST R5 R5_SAVE_CHECK_SEQUANCE_ALLOCATE
+ST R7 R7_SAVE_CHECK_SEQUANCE_ALLOCATE
+ 
+ 
+AND R2 R2 #0 ; Temp
+AND R5 R5 #0 ; -R3
+ 
+NOT R5 R3
+ADD R5 R5 #1  ;R5=-R3
+;CALC R2=M[R1][1] = R0 + [col=1] + [[cols in matrix=2] * [row=R1]]
+ADD R2 R0 #1
+ADD R2 R2 R1
+ADD R2 R2 R1
+LDR R2 R2 #0			; R2 = M[R1][1]
+ADD R2 R2 #1			; R2 = R2+1
+ADD R2 R2 R5			; R2 = R2-R3
+BRz END_CHECK_SEQUANCE_ALLOCATE		; if(R0[row=R1][1] +1 != R3)-> Flag = -1 ,Else: END_CHECK_SEQUANCE_ALLOCATE
+ADD R4 R4 #-1			; Flag=-1
+ 
+END_CHECK_SEQUANCE_ALLOCATE:
+LD R2 R2_SAVE_CHECK_SEQUANCE_ALLOCATE
+LD R5 R5_SAVE_CHECK_SEQUANCE_ALLOCATE
+LD R7 R7_SAVE_CHECK_SEQUANCE_ALLOCATE
+ 
+RET
+ 
+;*********************************************;
+TwentyFour_Daily_Production .fill #24 
+MinusTwentyFour_Daily_Production .fill #-24 
+New_line_sign_Daily_Production  .fill #10
+ENTER_PRODUCTION_MES .stringz "Please enter production matrix:"
+R1_SAVE_Daily_Production .fill #0 
+R2_SAVE_Daily_Production .fill #0
+R3_SAVE_Daily_Production .fill #0
+R4_SAVE_Daily_Production .fill #0
+R5_SAVE_Daily_Production .fill #0
+R6_SAVE_Daily_Production .fill #0
+R7_SAVE_Daily_Production .fill #0
+ 
+Daily_Production: ;  Gets: R1=Pointer to Production_Matrix,R2=Pointer to MACHINES_MATRIX, R3=closing hour
+ST R1 R1_SAVE_Daily_Production 
+ST R2 R2_SAVE_Daily_Production
+ST R3 R3_SAVE_Daily_Production
+ST R4 R4_SAVE_Daily_Production
+ST R5 R5_SAVE_Daily_Production
+ST R6 R6_SAVE_Daily_Production
+ST R7 R7_SAVE_Daily_Production
+ 
+AND R0 R0 #0 ; Temp
+AND R4 R4 #0 ; Row index
+AND R5 R5 #0 ; Machine=col index
+AND R6 R6 #0 ; Working Hours
+ 
+;Initialization the active machines to be 0
+FOR_ROWS_ZERO: ;R4; 0<= row in Machine_Matrix <=2
+	;FOR_MACHINE_ZERO:	;R5; Machine_Matrix[R4=row][0]<= row in Productio_Matrix=num Machine <= Machine_Matrix[R4=row][1]
+		;CALC R5=Machine_Matrix[row][0]; R5 = R2 + (col=R5=0) + (cols in matrix=2)* (row=R4)
+		ADD R5 R2 R5	; R5 = address of Machine_Matrix + (col=R5=0)
+ 
+		;MUL:R0*R1=R2 ; 2 * row=R4 ; 2*R4 = R2
+		ADD R0 R0 #2
+		ADD R1 R4 #0	; R1 = R4=row
+		AND R2 R2 #0 	; Temp
+		JSR Mul
+		ADD R5 R5 R2	; R5 hold the address of Machine_Matrix[row=R4][0]
+		LD R1 R1_SAVE_Daily_Production 
+		LD R2 R2_SAVE_Daily_Production
+		LDR R5 R5 #0	; R5 = M[row=R4][col=0] = Machine
+		ADD R5 R5 #0
+		BRn FOR_ROWS_ZERO_COUNTER ;  R5 = -1 there is no allocated machines for this type
+ 
+ 
+		FOR_WORKING_HOURS_ZERO:	;R6; 0<=cols in Productio_Matrix <=23
+			;CALC R1=Production_Matrix[row][col]; R1 = R1 + (col=R6) + (cols in matrix=24)* (row=R5=Machine)
+ 
+			;MUL:R0*R1=R2 ; 24 * row=R5 ; 24*R5 = R2
+			LD R0 TwentyFour_Daily_Production 	; R0=24
+			ADD R1 R5 #0	;R1 = R5=row
+			AND R2 R2 #0 	; Temp
+			JSR Mul
+			LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+			ADD R1 R1 R2	; R1 = address of Production_Matrix + R2 (R2 = 24*row)
+ 
+			ADD R1 R1 R6	; R1 = R1+R6 (R6=col)
+			AND R0 R0 #0	; R0=0
+			STR R0 R1 #0	; Production_Matrix[row=R5][col=R6]=R1 = 0
+			LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+			LD R2 R2_SAVE_Daily_Production 	; Pointer to MACHINES_MATRIX
+ 
+			FOR_WORKING_HOURS_ZERO_COUNTER:
+			ADD R6 R6 #1	; R6++
+			LD R0 MinusTwentyFour_Daily_Production
+			ADD R0 R6 R0	; R0 = R6-24
+			BRn FOR_WORKING_HOURS_ZERO
+			BR FOR_MACHINE_ZERO_COUNTER
+ 
+	FOR_MACHINE_ZERO_COUNTER:
+	ADD R5 R5 #1 	; R5++
+ 
+	;CALC R0=Machine_Matrix[row][1] ; R0 = R2 + (col=1) + (cols in matrix=2) * (row=R4)
+	;MUL:R0*R1=R2 ; 2 * row=R4 ; 2*R4 = R2	
+	ADD R0 R0 #2	; R0=2
+	ADD R1 R4 #0	; R1 = R4=row
+	AND R2 R2 #0 	; Temp
+	JSR Mul
+ 
+	ADD R0 R2 #1	; R0 =	(col=1) + 2*(row=R4)
+	LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+	LD R2 R2_SAVE_Daily_Production	; Pointer to MACHINES_MATRIX
+	ADD R0 R0 R2	; R0 = R0 + address of Machine_Matrix
+	LDR R0 R0 #0	; R0 = M[row=R4][col=1]=Machine
+ 
+	NOT R0 R0
+	ADD R0 R0 #1	; R0 = -R0=-M[row=R4][col=1]
+ 
+	ADD R0 R5 R0  	; if (R5-M[row=R4][col=1]>0) -> continue to the next row with FOR_ROWS
+	BRp FOR_ROWS_ZERO_COUNTER
+	AND R6 R6 #0 	; Working Hours
+	BR FOR_WORKING_HOURS_ZERO		
+ 
+FOR_ROWS_ZERO_COUNTER:
+ADD R4 R4 #1 	; R4++
+ADD R0 R4 #-3 	; if (R4=3) -> Finished initialize the matrix so continue to END_MachineAllocator
+BRz END_INITIALIZATION
+AND R0 R0 #0	; R0=0
+AND R5 R5 #0	; R5=0
+AND R6 R6 #0 	; R6=0
+BR FOR_ROWS_ZERO		; if (R4<3) -> Continue to the next col with FOR_MACHINE_ZERO
+ 
+ 
+END_INITIALIZATION:
+AND R4 R4 #0	; R0=0
+AND R5 R5 #0	; R5=0
+AND R6 R6 #0	; R6=0
+LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+LD R2 R2_SAVE_Daily_Production	; Pointer to MACHINES_MATRIX
+ 
+LEA R0 ENTER_PRODUCTION_MES
+PUTS
+LD R0 New_line_sign_Daily_Production
+OUT
+AND R0 R0 #0	; R0=0
+ 
+FOR_ROWS_PRODUCTION;R4; 0<= row in Machine_Matrix <=2
+	;FOR_MACHINE_PRODUCTION:	;R5; Machine_Matrix[R4=row][0]<= row in Productio_Matrix=num Machine <= Machine_Matrix[R4=row][1]
+		;CALC R5=Machine_Matrix[row][0]; R5 = R2 + (col=R5=0) + (cols in matrix=2)* (row=R4)
+		ADD R5 R2 R5	; R5 = address of Machine_Matrix + (col=R5=0)
+ 
+		;MUL:R0*R1=R2 ; 2 * row=R4 ; 2*R4 = R2
+		ADD R0 R0 #2
+		ADD R1 R4 #0	; R1 = R4=row
+		AND R2 R2 #0 	; Temp
+		JSR Mul
+		ADD R5 R5 R2	; R5 hold the address of Machine_Matrix[row=R4][0]
+		LD R1 R1_SAVE_Daily_Production 
+		LD R2 R2_SAVE_Daily_Production 
+		LDR R5 R5 #0	; R5 = M[row=R4][col=0] = Machine
+		ADD R5 R5 #0
+		BRn FOR_ROWS_PRODUCTION_COUNTER;  R5 = -1 there is no allocated machines for this type
+ 
+ 
+		FOR_WORKING_HOURS_PRODUCTION:	;R6; 0<=cols in Productio_Matrix <=23
+			ADD R0 R6 #8 
+			LD R1 TwentyFour_Daily_Production
+			JSR Div	; R0/R1=R2 ; R0%R1=R3
+ 
+			;CALC R1=Production_Matrix[row=Machine=R5][col_hore=R3]; R1 = R1 + (col_hore=R3) + (cols in matrix=24)* (row=R5=Machine)
+			;MUL:R0*R1=R2 ; 24 * row=R5 ; 24*R5 = R2
+			LD R0 TwentyFour_Daily_Production 	; R0=24
+			ADD R1 R5 #0	; R1 = R5=row
+			AND R2 R2 #0 	; Temp
+			JSR Mul
+			LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+			ADD R1 R1 R2	; R1 = address of Production_Matrix + R2 (R2 = 24*row)
+			ADD R1 R1 R3	; R1 = R1+R3 (col_hore=R3)
+ 
+			GET_INPUT:
+			JSR MatrixNum	; return R0=number R3=flag last input is ENTER
+			STR R0 R1 #0		; Production_Matrix[row=R5][col=R6]=R1 = R0
+			LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+			LD R2 R2_SAVE_Daily_Production 	; Pointer to MACHINES_MATRIX
+			ADD R3 R3 #0		; if ENTER was the last input so R3=1
+			BRp FOR_MACHINE_PRODUCTION_COUNTER
+ 
+			FOR_WORKING_HOURS_PRODUCTION_COUNTER:
+			ADD R6 R6 #1	; R6++
+			ST R4 R4_SAVE_Daily_Production
+			LD R4 R3_SAVE_Daily_Production	; R4 = close hour 
+			AND R3 R3 #0
+			ADD R3 R3 #8			; R3 = start hour =8
+			JSR Calc_Work_hours	; Gets: R3=start hour, close houre=R4 ,Return: Sum of working hours in R0
+			LD R3 R3_SAVE_Daily_Production
+			LD R4 R4_SAVE_Daily_Production
+			NOT R0 R0
+			ADD R0 R0 #1
+			ADD R0 R6 R0	; R0 = R6-R0 ; R0 = R6 - Work_hours
+			BRn FOR_WORKING_HOURS_PRODUCTION
+			BR FOR_MACHINE_PRODUCTION_COUNTER
+ 
+	FOR_MACHINE_PRODUCTION_COUNTER:
+	AND R6 R6 #0 	; Working Hours
+	ADD R5 R5 #1 	; R5++
+ 
+	;CALC R0=Machine_Matrix[row][1] ; R0 = R2 + (col=1) + (cols in matrix=2) * (row=R4)
+	;MUL:R0*R1=R2 ; 2 * row=R4 ; 2*R4 = R2	
+	AND R0 R0 #0	; R0=0
+	ADD R0 R0 #2	; R0=2
+	ADD R1 R4 #0	; R1 = R4=row
+	AND R2 R2 #0 	; Temp
+	JSR Mul
+ 
+	ADD R0 R2 #1	; R0 =	(col=1) + 2*(row=R4)
+	LD R1 R1_SAVE_Daily_Production 	; Pointer to Production_Matrix
+	LD R2 R2_SAVE_Daily_Production	; Pointer to MACHINES_MATRIX
+	ADD R0 R0 R2	; R0 = R0 + address of Machine_Matrix
+	LDR R0 R0 #0	; R0 = M[row=R4][col=1]=Machine
+ 
+	NOT R0 R0
+	ADD R0 R0 #1	; R0 = -R0=-M[row=R4][col=1]
+ 
+	ADD R0 R5 R0  	; if (R5-M[row=R4][col=1]>0) -> continue to the next row with FOR_ROWS
+	BRp FOR_ROWS_PRODUCTION_COUNTER
+	BR FOR_WORKING_HOURS_PRODUCTION		
+ 
+FOR_ROWS_PRODUCTION_COUNTER:
+ADD R4 R4 #1 	; R4++
+ADD R0 R4 #-3 	; if (R4=3) -> Finished initialize the matrix so continue to END_MachineAllocator
+BRz END_PRODUCTION
+AND R0 R0 #0	; R0=0
+AND R5 R5 #0	; R5=0
+BR FOR_ROWS_PRODUCTION		; if (R4<3) -> Continue to the next col with FOR_MACHINE_PRODUCTION
+ 
+END_PRODUCTION:
+LD R1 R1_SAVE_Daily_Production 
+LD R2 R2_SAVE_Daily_Production
+LD R3 R3_SAVE_Daily_Production
+LD R4 R4_SAVE_Daily_Production
+LD R5 R5_SAVE_Daily_Production
+LD R6 R6_SAVE_Daily_Production
+LD R7 R7_SAVE_Daily_Production
+ 
+RET
+ 
+;*********************************************;
+TwentyFour_Calc_Work_hours .fill #24 
+R1_SAVE_Calc_Work_hours .fill #0 
+R3_SAVE_Calc_Work_hours .fill #0 
+R4_SAVE_Calc_Work_hours .fill #0 
+R7_SAVE_Calc_Work_hours .fill #0 
+ 
+Calc_Work_hours: ;  Gets: R3=start hour, close hour =R4,Return: Sum of working hours in R0
+ST R1 R1_SAVE_Calc_Work_hours
+ST R3 R3_SAVE_Calc_Work_hours
+ST R4 R4_SAVE_Calc_Work_hours
+ST R7 R7_SAVE_Calc_Work_hours
+ 
+AND R1 R1 #0 ; Temp
+AND R0 R0 #0 ; Result
+ 
+;if( close<8 && close>=0)
+ADD R4 R4 #0	; if(close<0)-> Go to the other case
+BRn ELSE
+ADD R1 R4 #-8	; if(close-8=>0)-> Go to the other case
+BRzp ELSE
+ 
+NOT R3 R3
+ADD R3 R3 #1
+ADD R1 R4 R3	; close-open
+ADD R0 R0 R1	; result=(close-open)
+LD R1 TwentyFour_Calc_Work_hours
+ADD R0 R0 R1	; result= 24+(close-open)
+BR END_CALC_WORK_HOURS
+ 
+ELSE:
+NOT R3 R3
+ADD R3 R3 #1
+ADD R0 R4 R3	; result= close-open
+ 
+END_CALC_WORK_HOURS:
+LD R1 R1_SAVE_Calc_Work_hours
+LD R3 R3_SAVE_Calc_Work_hours
+LD R4 R4_SAVE_Calc_Work_hours
+LD R7 R7_SAVE_Calc_Work_hours
+RET
+ 
+;********************************************************************;
+R1_SAVE_Median .fill #0  
+R2_SAVE_Median .fill #0 
+R3_SAVE_Median .fill #0  
+R4_SAVE_Median .fill #0 
+R5_SAVE_Median .fill #0 
+R6_SAVE_Median .fill #0 
+R7_SAVE_Median .fill #0
+Pointer_List .fill Head	
+Pointer_Array_Reset_Value .fill Array_Reset_Value
+Array_Size .fill #73
+Pointer_Calc_Work_hours .fill Calc_Work_hours	
+Pointer_Reset_List .fill Reset_List
+ 
+Median:	;	Gets in R1=Productio_Matrix , R2= number of machine R3=	start hour R4=close hour ;Return R0=Median
+ST R1 R1_SAVE_Median  
+ST R2 R2_SAVE_Median  
+ST R3 R3_SAVE_Median   
+ST R4 R4_SAVE_Median  
+ST R5 R5_SAVE_Median 
+ST R6 R6_SAVE_Median 
+ST R7 R7_SAVE_Median
+ 
+ADD R0 R0 #0
+AND R5 R5 #0 ;List size
+AND R6 R6 #0 
+ 
+LD R6 Pointer_Calc_Work_hours
+JSRR R6 ; Gets R3=close hour ; Return R0=total work hours
+ADD R5 R0 #0 	;R5(list_size) =  R0=total work hours;
+LD R3 R3_SAVE_Median 
+ 
+ADD R4 R5 #0
+JSR Array_To_List
+LDI R0 Pointer_List
+ADD R2 R5 #0	;List size
+LDI R1 Pointer_List
+JSR BubbleSort
+ADD R4 R1 #0
+ 
+;list_size\2 = R2 ; list_size%2 = R3
+ADD R0 R5 #0	; R0 = List size
+AND R1 R1 #0	
+ADD R1 R1 #2	; R1 = 2
+JSR Div
+ADD R6 R2 R3	; R6 = R2+R3
+ADD R0 R4 #0
+ 
+WHILE_MEDIAIN_LIST: ; R0(Median) = LIST[R6]
+	ADD R6 R6 #-1
+	BRz END_MEDIAN
+	ADD R0 R0 #2	
+	LDR R0 R0 #0
+	BR WHILE_MEDIAIN_LIST
+ 
+END_MEDIAN:
+LDR R0 R0 #0				; R0 = Median
+ 
+;LDI R1 Pointer_List
+ADD R1 R4 #0				; R1 = pointer to list
+LD R2 Pointer_Array_Reset_Value	; R2 = ponter to array
+LD R3 Array_Size			; R3 = Array size
+LD R4 Pointer_Reset_List
+JSRR R4
+ 
+LD R1 R1_SAVE_Median  
+LD R2 R2_SAVE_Median  
+LD R3 R3_SAVE_Median   
+LD R4 R4_SAVE_Median  
+LD R5 R5_SAVE_Median 
+LD R6 R6_SAVE_Median 
+LD R7 R7_SAVE_Median
+RET
+
+;********************************************************************;
+R1_SAVE_Array_To_List .fill #0  
+R2_SAVE_Array_To_List .fill #0 
+R3_SAVE_Array_To_List .fill #0  
+R4_SAVE_Array_To_List .fill #0 
+R5_SAVE_Array_To_List .fill #0 
+R6_SAVE_Array_To_List .fill #0 
+R7_SAVE_Array_To_List .fill #0
+TwentyFour_Array_To_List .fill #24
+
+Array_To_List:	;Gets Production_Matrix(R1), MachineNumber (R2),  R3 (begin),R4(work hours) ; Return R0=LIST from Array
+ST R1 R1_SAVE_Array_To_List
+ST R2 R2_SAVE_Array_To_List 
+ST R3 R3_SAVE_Array_To_List
+ST R4 R4_SAVE_Array_To_List
+ST R5 R5_SAVE_Array_To_List 
+ST R6 R6_SAVE_Array_To_List 
+ST R7 R7_SAVE_Array_To_List
+
+AND R5 R5 #0
+AND R6 R6 #0
+LDI R0 Pointer_List
+
+FOR_ARRY_TO_LIST:
+	;CALC R1=Production_Matrix[row=Machine=R2][col_hore=R3]; R1 = R1 + (col_hore=R3) + (cols in matrix=24)* (row=R2=Machine)
+	;MUL:R0*R1=R2 ; 24 * row=R2 ; 24*R2 = R2
+	ADD R6 R0 #0 	; Save R0
+	LD R0 TwentyFour_Array_To_List 	; R0=24
+	ADD R1 R2 #0	; R1 = R2=row
+	AND R2 R2 #0 	; Temp
+	JSR Mul
+	LD R1 R1_SAVE_Array_To_List 	; Pointer to Production_Matrix
+	ADD R1 R1 R2	; R1 = address of Production_Matrix + R2 (R2 = 24*row)
+	ADD R1 R1 R3	; R1 = R1+R3 (col_hore=R3) 
+	LD R2 R2_SAVE_Array_To_List 	; MachineNumber
+	ADD R0 R6 #0 	; R0 Restore his original value
+	
+	LDR R1 R1 #0
+	STR R1 R0 #0	; R0->data= R1
+	ADD R0 R0 #2	; R0 = R0->next
+	LDR R0 R0 #0
+	
+	ADD R3 R3 #1	; R3++
+	ADD R4 R4 #-1	; if(R4 == 0) -> EndSub ; ELSE->Countinue filling the list
+	BRz END_ARRY_TO_LIST
+	BR FOR_ARRY_TO_LIST
+	
+END_ARRY_TO_LIST:
+LDI R0 Pointer_List
+LD R1 R1_SAVE_Array_To_List
+LD R2 R2_SAVE_Array_To_List
+LD R3 R3_SAVE_Array_To_List   
+LD R4 R4_SAVE_Array_To_List 
+LD R5 R5_SAVE_Array_To_List
+LD R6 R6_SAVE_Array_To_List
+LD R7 R7_SAVE_Array_To_List
+Ret
+
+;********************************************************************;
+R1_SAVE_BubbleSort .fill #0 
+R2_SAVE_BubbleSort .fill #0
+R3_SAVE_BubbleSort .fill #0
+R4_SAVE_BubbleSort .fill #0
+R5_SAVE_BubbleSort .fill #0
+R6_SAVE_BubbleSort .fill #0
+R7_SAVE_BubbleSort .fill #0
+
+BubbleSort: ;BubbleSort(*list(R1), size(R2))
+ST R1 R1_SAVE_BubbleSort 
+ST R2 R2_SAVE_BubbleSort
+ST R3 R3_SAVE_BubbleSort 
+ST R4 R4_SAVE_BubbleSort 
+ST R5 R5_SAVE_BubbleSort 
+ST R6 R6_SAVE_BubbleSort 
+ST R7 R7_SAVE_BubbleSort
+
+AND R0 R0 #0 ; Temp
+AND R3 R3 #0 ; LastPtr=NULL
+AND R4 R4 #0 ; Flag
+AND R5 R5 #0 ; Save list
+AND R6 R6 #0 ;
+
+LDR R5 R1 #0 ; Pointer to List
+BRz END_BUBBLESORT ; if(R1==NULL)
+
+WHILE_END_LIST:
+ADD R2 R2 #0
+BRz DO_BUBBLESORT
+LDR R1 R1 #2
+ADD R3 R1 #0
+ST R3 R3_SAVE_BubbleSort
+ADD R2 R2 #-1
+BR WHILE_END_LIST
+
+DO_BUBBLESORT:
+	AND R4 R4 #0 ; Flag
+	LD R1 R1_SAVE_BubbleSort	; R1=*List
+	WHILE_BUBBLESORT:
+		;while(R1->next != R3)
+		ADD R5 R1 #0	; R5=R1
+		LDR R5 R5 #2	; R5 = R1->next  
+		NOT R3 R3
+		ADD R3 R3 #1	; R3 = -R3
+		ADD R0 R5 R3	
+		BRz CHECK_FOR_DO
+
+		;if(( R1->data > R1->next->data)
+		LDR R5 R1 #0	; R1->data
+		LDR R0 R1 #2 	; R0 = R1->next
+		LDR R0 R0 #0	; R0->data
+		NOT R0 R0
+		ADD R0 R0 #1
+		ADD R0 R5 R0
+		BRp SWAP
+		BR UPDATE_POINTER
+		
+		SWAP:
+		ADD R5 R1 #0
+		LDR R0 R1 #2	; R0 = R1->next
+		LD R6 R1_SAVE_BubbleSort
+		JSR Swap ; (*num1=R5 , *num2=R0,Head=R6)
+		ST R6 R1_SAVE_BubbleSort
+		ADD R4 R4 #1
+		LD R3 R3_SAVE_BubbleSort
+		BR WHILE_BUBBLESORT
+		
+		UPDATE_POINTER:
+		LDR R1 R1 #2	; R1 = R1->next
+		LD R3 R3_SAVE_BubbleSort
+		BR WHILE_BUBBLESORT
+		
+	
+	CHECK_FOR_DO:
+	;UPDATE_LASTpt:
+	ADD R3 R1 #0
+	ST R3 R3_SAVE_BubbleSort
+	ADD R4 R4 #0
+	BRp DO_BUBBLESORT
+	BR END_BUBBLESORT
+
+END_BUBBLESORT:
+LD R1 R1_SAVE_BubbleSort 
+LD R2 R2_SAVE_BubbleSort
+LD R3 R3_SAVE_BubbleSort 
+LD R4 R4_SAVE_BubbleSort 
+LD R5 R5_SAVE_BubbleSort  
+LD R7 R7_SAVE_BubbleSort
+RET
+
+;********************************************************************;
+R0_SAVE_Swap .fill #0 
+R1_SAVE_Swap .fill #0 
+R2_SAVE_Swap .fill #0
+R3_SAVE_Swap .fill #0
+R4_SAVE_Swap .fill #0
+R5_SAVE_Swap .fill #0
+R7_SAVE_Swap .fill #0
+
+Swap: ;Swap(*num1=R5,*num2=R0,Head=R6)
+ST R0 R0_SAVE_Swap 
+ST R1 R1_SAVE_Swap 
+ST R2 R2_SAVE_Swap
+ST R3 R3_SAVE_Swap 
+ST R4 R4_SAVE_Swap 
+ST R5 R5_SAVE_Swap 
+ST R7 R7_SAVE_Swap
+
+AND R2 R2 #0 ; Temp
+AND R3 R3 #0 ; Temp
+AND R4 R4 #0 ; Temp
+LDR R4 R0 #2   ; R4=R0->next
+
+ADD R3 R5 #0 ; R3=R5
+NOT R3 R3
+ADD R3 R3 #1 ; R3=-R5
+ADD R3 R6 R3 ; if(R5==Head)
+BRnp ELSE_CHANGE_PREV
+ADD R6 R0 #0
+ADD R3 R0 #1   ; R0->prev
+STR R2 R3 #0   ; R0->prev = 0
+BR CONTINUUE
+
+ELSE_CHANGE_PREV:
+LDR R3 R5 #1   ; R5->prev
+ADD R3 R3 #2   ; R5->prev->next
+STR R0 R3 #0   ; R5->prev->next = R0
+ADD R3 R0 #1   ; R0->prev
+LDR R2 R5 #1   ; R2=R5->prev
+STR R2 R3 #0   ; R0->prev = R5->prev
+
+CONTINUUE:
+ADD R3 R0 #2 ; R3=R0->next
+STR R5 R3 #0 ; R0->next = R5
+ADD R3 R5 #1 ; R3=R5->prev 
+STR R0 R3 #0 ; R5->prev = R0
+ADD R3 R5 #2 ; R3=R5->next 
+STR R4 R3 #0 ; R5->next = R4
+
+ADD R4 R4 #0
+BRz END_SWAP ; if R0->next=NULL end of list
+ADD R4 R4 #1 ; R4->prev
+STR R5 R4 #0 ; R4->prev = R5
+
+END_SWAP:
+LD R1 R1_SAVE_Swap 
+LD R2 R2_SAVE_Swap
+LD R3 R3_SAVE_Swap
+LD R4 R4_SAVE_Swap 
+LD R5 R5_SAVE_Swap 
+LD R7 R7_SAVE_Swap
+RET
+
+;********************************************************************;
+R0_SAVE_Reset_List .fill #0
+R1_SAVE_Reset_List .fill #0
+R2_SAVE_Reset_List .fill #0 
+R3_SAVE_Reset_List .fill #0 
+R4_SAVE_Reset_List .fill #0 
+R5_SAVE_Reset_List .fill #0
+R7_SAVE_Reset_List .fill #0 
+
+Reset_List: ;Gets R1=list to reset R2=Array with value R3=Array Size
+ST R0 R0_SAVE_Reset_List
+ST R2 R2_SAVE_Reset_List  
+ST R3 R3_SAVE_Reset_List  
+ST R4 R4_SAVE_Reset_List 
+ST R5 R5_SAVE_Reset_List 
+ST R7 R7_SAVE_Reset_List 
+
+AND R0 R0 #0
+AND R4 R4 #0
+AND R5 R5 #0
+
+;Fix Head Pointer
+LDR R0 R2 #0
+ADD R1 R0 #0
+ST R1 R1_SAVE_Reset_List	; Saving the head pointer of the list
+ADD R2 R2 #1
+ADD R4 R4 #1
+
+FOR_ARRAY:
+	; fill Data
+	LDR R0 R2 #0	; R0 = Array[R4]
+	STR R0 R1 #0	; R1->Data = R0 
+	ADD R2 R2 #1	
+	ADD R1 R1 #1	; R1++
+	ADD R4 R4 #1	; R4++
+	
+	; fill Prev
+	LDR R0 R2 #0	; R0 = Array[R4]
+	STR R0 R1 #0	; R1->Prev = R0 
+	ADD R2 R2 #1
+	ADD R1 R1 #1	; R1++
+	ADD R4 R4 #1	; R4++
+	
+	; fill Next
+	LDR R0 R2 #0	; R0 = Array[R4]
+	STR R0 R1 #0	; R1->Next = R0 
+	ADD R2 R2 #1
+	LDR R1 R1 #0	; R1 = MEM[R1]
+	ADD R4 R4 #1	; R4++
+	
+	COUNTER_ARRAY:
+	NOT R5 R3
+	ADD R5 R5 #1	; R5 = -R3 = -Array Size
+	ADD R5 R4 R5	; if(R4<R3)->Countinue ; Else go to END_SUB
+	BRz END_Reset_List
+	BR FOR_ARRAY
+	
+END_Reset_List:
+LD R0 R0_SAVE_Reset_List 
+LD R2 R2_SAVE_Reset_List  
+LDR R1 R2 #0 			; R1 = Pointer to the Head of the reset list
+LD R3 R3_SAVE_Reset_List  
+LD R4 R4_SAVE_Reset_List 
+LD R5 R5_SAVE_Reset_List 
+LD R7 R7_SAVE_Reset_List 	
+Ret
+ 
+;********************************************************************;
+R1_SAVE_GetNum .fill #0
+R2_SAVE_GetNum .fill #0
+R3_SAVE_GetNum .fill #0
+R4_SAVE_GetNum .fill #0
+R5_SAVE_GetNum .fill #0
+R7_SAVE_GetNum .fill #0
+MinusZeroAscii .fill #-48 
+MinusSpace .fill #-32 
+ 
+GetNum:
+ST R1 R1_SAVE_GetNum 
+ST R2 R2_SAVE_GetNum 
+ST R3 R3_SAVE_GetNum 
+ST R4 R4_SAVE_GetNum 
+ST R5 R5_SAVE_GetNum 
+ST R7 R7_SAVE_GetNum
+ 
+AND R0 R0 #0
+AND R1 R1 #0 ; RESULT
+ADD R1 R1 #-1 ; RESULT
+AND R2 R2 #0 ; MinusZeroAscii
+AND R3 R3 #0 ; flag for neg number 
+ 
+FIRST_ENTER:
+GETC 		; At R0 the number is saved
+OUT
+JSR CHECK_FIRST_ENTER_IS_MINUS
+ADD R3 R3 #0
+BRp LOOP_GetNum
+ 
+;else check if first enter is ENTER
+ADD R0 R0 #-10
+BRnp Continue 	;if it is not ENTER
+BR END_SUB
+
+Continue:
+ADD R0 R0 #10
+LD R2 MinusZeroAscii ; R2=-48
+ADD R0 R0 R2         ; R0=R0-48
+ADD R1 R0 #0         ; R1=R0
+ 
+;geting all the outer numbers
+LOOP_GetNum:
+	GETC 		; At R0 the number is saved
+	OUT
+ 
+	;check_end_string: 
+	ADD R0 R0 #-10	
+	BRz END_SUB		; if it is ENTER
+	ADD R0 R0 #10  		; change back to original value
+
+	;change to original value (0<= number <=9)
+	LD R2 MinusZeroAscii	; R2=-48
+	ADD R0 R0 R2         	; R0=R0-48
+	JSR Calculate_Number	; check overflow else return R1=R1*10+R0
+	BR LOOP_GetNum
+ 
+END_SUB:
+ADD R3 R3 #0
+BRz COUNTINUE
+NOT R1 R1
+ADD R1 R1 #1
+ 
+COUNTINUE:
+ADD R0 R1 #0
+LD R1 R1_SAVE_GetNum
+LD R2 R2_SAVE_GetNum
+LD R3 R3_SAVE_GetNum
+LD R4 R4_SAVE_GetNum
+LD R5 R5_SAVE_GetNum
+LD R7 R7_SAVE_GetNum
+ 
+RET
+
+;********************************************************************;
+R2_SAVE_MINUS .fill #0
+R7_SAVE_MINUS .fill #0
+MinusAscii .fill #-45
+ 
+CHECK_FIRST_ENTER_IS_MINUS: ; check if first char is minus => R3(R6)=1 else R3(R6)=0
+ST R2 R2_SAVE_MINUS
+ST R7 R7_SAVE_MINUS
+ 
+LD R2 MinusAscii 
+ADD R0 R0 R2 	;"-" = 42 in ASCII
+BRnp END_MINUS
+ADD R3 R3 #1
+ 
+END_MINUS:
+	NOT R2 R2
+	ADD R2 R2 #1 ; R2=42
+	ADD R0 R0 R2
+	LD R2 R2_SAVE_MINUS
+	LD R7 R7_SAVE_MINUS
+ 
+RET
+ 
+;********************************************************************;
+R2_SAVE_Calculate_Number .fill #0
+R5_SAVE_Calculate_Number .fill #0
+R7_SAVE_Calculate_Number .fill #0
+ 
+Calculate_Number: ; Do R1*10+R0 return result in R1 + Check if overflow => R5=1 else R5=0
+ 
+ST R2 R2_SAVE_Calculate_Number 
+ST R5 R5_SAVE_Calculate_Number
+ST R7 R7_SAVE_Calculate_Number 
+ 
+AND R2 R2 #0
+AND R5 R5 #0	; save result	
+ADD R2 R2 #10	; counter
+ 
+ADD R1 R1 #1
+BRp UPDATE_R1
+ADD R0 R0 #0
+BRz END_Calculate_Number
+BRp LOOP_Calculate_Number
+ 
+ 
+UPDATE_R1:
+ADD R1 R1 #-1
+LOOP_Calculate_Number:
+	ADD R5 R5 R1
+	BRn OVERFLOW_FLAG
+	ADD R2 R2 #-1
+	BRnz LAST_CHECK
+	BR LOOP_Calculate_Number
+ 
+LAST_CHECK:
+	ADD R3 R3 #0
+	BRp NEG_NUMBER
+ 
+	;chack if R5+R0 is oveflow
+	ADD R5 R5 R0			; R5=R5+R0
+	BRn OVERFLOW_FLAG
+	BR END_Calculate_Number
+ 
+	NEG_NUMBER: 			; chack if -R3-R0 is oveflow ; chack if -R5-R0 is oveflow
+	NOT R5 R5
+	ADD R5 R5 #1
+	
+	;chack if -R5-R0 is oveflow
+	NOT R0 R0
+	ADD R0 R0 #1
+	ADD R5 R5 R0			; R5=-R5-R0
+	BRp OVERFLOW_FLAG
+	NOT R5 R5
+	ADD R5 R5 #1
+	BR END_Calculate_Number
+ 
+OVERFLOW_FLAG:
+ADD R4 R4 #1
+ 
+END_Calculate_Number:
+ADD R1 R5 #0 ; R1=R5
+LD R2 R2_SAVE_Calculate_Number
+LD R5 R5_SAVE_Calculate_Number
+LD R7 R7_SAVE_Calculate_Number
+ 
+RET
+
+;********************************************************************;
+R1_SAVE_PrintNum .fill #0  
+R2_SAVE_PrintNum .fill #0  
+R3_SAVE_PrintNum .fill #0 
+R4_SAVE_PrintNum .fill #0 
+R5_SAVE_PrintNum .fill #0  
+R7_SAVE_PrintNum .fill #0
+ZeroAscii .fill #48 
+Minus_sign_print .fill #45
+ARRAY .blkw #5 #0
+ 
+PrintNum: 				; Print the number in R0
+ST R1 R1_SAVE_PrintNum  
+ST R2 R2_SAVE_PrintNum  
+ST R3 R3_SAVE_PrintNum  
+ST R4 R4_SAVE_PrintNum 
+ST R5 R5_SAVE_PrintNum  
+ST R7 R7_SAVE_PrintNum 
+ 
+AND R1 R1 #0 	; Divisor 
+AND R2 R2 #0  	; Result of DIV
+AND R3 R3 #0  	; Carry
+AND R4 R4 #0  	; Flag if R0 neg number
+AND R5 R5 #0  	; Pointer to ARRAY
+ 
+LEA R5 ARRAY	; R5=pointer to the start of the ARRAY
+ADD R5 R5 #4	; R5=pointer to the end of the ARRAY
+ADD R4 R0 #0	
+ 
+LOOP_Div_10:
+	AND R1 R1 #0 	; R1=0
+	ADD R1 R1 #10 	; Divisor=10
+	JSR Div 		; R0\10=R2 , R3=carry
+	LD R1 ZeroAscii
+	ADD R3 R3 R1    ; R3=R3+48 (change to the ASCII value)
+	STR R3 R5 #0 	; mem[R5+0]<-R3
+	ADD R2 R2 #0    ; when the lest result of the Div was 0 so we do need to do more Div
+	BRz  END_Div_10
+	ADD R0 R2 #0
+	ADD R5 R5 #-1 	; move backwards
+	BR LOOP_Div_10
+ 
+END_Div_10:
+	LEA R5 ARRAY		; R5=pointer to the start of the ARRAY
+	ADD R3 R2 #4		; R3=4
+	ADD R4 R4 #0
+	BRzp PRINT_ARRAY
+	LD R0 Minus_sign_print 	; R0="-"
+	OUT
+ 
+PRINT_ARRAY:
+	LDR R0 R5 #0 		; mem[R5+0]->R0
+	BRz UPDATE_INDEX	; if R0=0 countine to the next number
+	OUT					; else print R0
+ 
+	UPDATE_INDEX:
+	ADD R3 R3 #-1 		; R3=R3-1
+	BRn END_PRINT_ARRAY	; check if we get to the end of the array
+	ADD R5 R5 #1
+	BR PRINT_ARRAY
+ 
+END_PRINT_ARRAY:
+AND R0 R0 #0	; R0=0
+LEA R5 ARRAY	; R5=pointer to the start of the ARRAY
+ADD R3 R0 #4	; R3=4
+ 
+RESET_THE_ARRAY:
+	STR R0 R5 #0 		; mem[R5+0]<-R0
+	ADD R3 R3 #-1 		; R3=R3-1
+	BRn END_PrintNum	; check if we get to the end of the array
+	ADD R5 R5 #1
+	BR RESET_THE_ARRAY
+ 
+END_PrintNum:	
+LD R1 R1_SAVE_PrintNum
+LD R2 R2_SAVE_PrintNum
+LD R3 R3_SAVE_PrintNum
+LD R4 R4_SAVE_PrintNum
+LD R5 R5_SAVE_PrintNum
+LD R7 R7_SAVE_PrintNum
+ 
+RET
+
+;********************************************************************;
+R3_SAVE_MUL .fill #0
+R4_SAVE_MUL .fill #0
+R7_SAVE_MUL .fill #0
+ 
+Mul: ; Mul subroutine : R2 <-- R0 * R1
+ST R3 R3_SAVE_MUL
+ST R4 R4_SAVE_MUL
+ST R7 R7_SAVE_MUL
+ 
+;Initializes R3 to 0
+AND R3 R3 #0
+;Initializes R2 to 0
+AND R2 R2 #0
+ 
+;CHECK IF ONE OF THE PARAMETERS IS 0
+ADD R3 R0 #0 
+BRz END_MUL_SUB
+ADD R3 R1 #0 
+BRz END_MUL_SUB
+ 
+AND R3 R3 #0 ;Initializes to 0
+ADD R3 R3 R0 ; R3 = R0
+AND R4 R4 #0 ;Initializes to 0
+ADD R4 R4 R1 ; R4 = R1
+BRp DO_MUL
+ 
+;R1 NEGATIVE
+;R3 = -R3 : Two's complement
+NOT R3 R3
+ADD R3 R3 #1
+;R4 = -R4 : Two's complement
+NOT R4 R4
+ADD R4 R4 #1
+ 
+DO_MUL:
+AND R4 R4 R4 ; check if R4 is 0
+BRnz END_MUL_SUB
+ADD R2 R2 R3 ; R2 += R3
+ADD R4 R4 #-1 ; R4--
+BR DO_MUL
+ 
+END_MUL_SUB:
+ 
+LD R3 R3_SAVE_MUL
+LD R4 R4_SAVE_MUL
+LD R7 R7_SAVE_MUL
+ 
+RET
+ 
+;********************************************************************;
+R1_SAVE_MatrixNum .fill #0
+R2_SAVE_MatrixNum .fill #0
+R7_SAVE_MatrixNum .fill #0
+MinusZeroAscii_MatrixNum .fill #-48 
+MinusSpace_MatrixNum .fill #-32 
+ 
+MatrixNum:
+ST R1 R1_SAVE_MatrixNum
+ST R2 R2_SAVE_MatrixNum 
+ST R7 R7_SAVE_MatrixNum
+ 
+AND R0 R0 #0
+AND R1 R1 #0 ; RESULT
+AND R2 R2 #0 ; MinusZeroAscii
+AND R3 R3 #0 ; Temp
+ 
+LOOP_MATRIXNUM:
+	GETC 		; At R0 the number is saved
+	OUT
+ 
+	;check_end_string: 
+	ADD R3 R0 #0		; Save R3=R0
+	LD R2 MinusSpace_MatrixNum	; R2=-32
+	ADD R3 R3 R2
+	BRz END_LOOP_MATRIXNUM		; if it is SPACE
+	
+	ADD R3 R0 #0		; Save R3=R0
+	ADD R3 R3 #-10		; 
+	BRz INPUT_ENTER		; if it is ENTER
+	
+	LD R2 MinusZeroAscii_MatrixNum ; R2=-48
+	ADD R0 R0 R2         ; R0=R0-48
+	
+	ADD R3 R0 #0		; Save R3=R0
+	AND R0 R0 #0
+	ADD R0 R0 #10		; R0=10
+	;R1*R0=R2 ; R1*10=R1
+	JSR Mul
+	ADD R1 R2 R3 		; R1 = (R1*10)+R0
+	BR LOOP_MATRIXNUM
+
+INPUT_ENTER:
+ADD R0 R1 #0
+AND R3 R3 #0
+ADD R3 R3 #1	; flag=1
+BR END_MatrixNum
+
+END_LOOP_MATRIXNUM:
+AND R3 R3 #0	; flag=0
+ADD R0 R1 #0
+
+END_MatrixNum:
+LD R1 R1_SAVE_MatrixNum
+LD R2 R2_SAVE_MatrixNum
+LD R7 R7_SAVE_MatrixNum
+RET
+
+;********************************************************************;
+ 
+R4_SAVE_DIV .fill #0
+R5_SAVE_DIV .fill #0
+R6_SAVE_DIV .fill #0
+R7_SAVE_DIV .fill #0
+ 
+Div: ; Mul subroutine : R2 <-- R0 / R1
+ST R4 R4_SAVE_DIV
+ST R5 R5_SAVE_DIV
+ST R6 R6_SAVE_DIV
+ST R7 R7_SAVE_DIV
+ 
+; Initializes to 0
+AND R2 R2 #0 ; Result
+AND R3 R3 #0 ; Carry
+AND R4 R4 #0 ; R4 = R1
+AND R5 R5 #0 ; NEGATIVE_OPERANDS_COUTNER
+AND R6 R6 #0  ;R3_SIGN
+ 
+ADD R4 R1 #0 ;R4=R1
+BRz DIVISOR_ZERO  ;Check if R1 is 0
+ 
+ADD R3 R0 #0 ;R3=R0
+BRz DIV_END_SUB  ; Check if R0 is 0, R2, R3 already contain 0s
+ 
+; Check if R1 is neg
+ADD R4 R1 #0 
+BRn CASE_R1_NEG
+ 
+; R1 is positive, change R1 sign to negative
+NOT R4 R4    ; R4='R4
+ADD R4 R4 #1 ; R4=-R1
+BR	DIV_CHECK_R0_NEG
+ 
+CASE_R1_NEG:
+ADD R5 R5 #1 ; Flag that we have a neg num
+ 
+DIV_CHECK_R0_NEG: ;check if R0 is neg
+ADD R3 R0 #0	
+BRp DO_DIV  ;R0 and R1 is pos
+NOT R3 R0      ; R3='R0
+ADD R3 R3 #1   ; R3=-R3
+ADD R5 R5 #1   ; Flag that we have a neg num
+ 
+; Fall through DO_DIV
+ 
+DO_DIV:
+ADD R6 R3 #0 ; R6=R3=R0 pos
+LOOP_DIV:
+ADD R6 R6 R4 ; R6=R6-R4
+BRn DIV_CHECK_SIGN
+ADD R2 R2 #1 ; R2=R2+1
+ADD R3 R6 #0 ; R3=R6 (CARRRY)
+BR LOOP_DIV
+ 
+DIV_CHECK_SIGN:
+ADD R6 R2 #0 ; If 0=Division result -> don't chnge sign
+BRz DIV_END_SUB
+ADD R6 R5 #-2 ; If flag == 2 -> don't change sign becouse both neg
+BRz DIV_END_SUB
+AND R6 R5 #1 
+BRz DIV_END_SUB ; If flag == 0 ->  don't change sign becouse both pos
+ 
+;BRnp DIV_CHANGE_SIGN - if flag == 1 -> change sign because one of them is neg
+;DIV_CHANGE_SIGN:
+NOT R2 R2
+ADD R2 R2 #1
+BRn DIV_END_SUB
+ 
+;Invalid input
+DIVISOR_ZERO:
+ADD R2 R2 #-1
+ADD R3 R3 #-1
+ 
+DIV_END_SUB:
+LD R4 R4_SAVE_DIV
+LD R5 R5_SAVE_DIV
+LD R6 R6_SAVE_DIV
+LD R7 R7_SAVE_DIV
+ 
+RET
+
+;********************************************************************;
+R0_SAVE_Reset_Matrix .fill #0
+R1_SAVE_Reset_Matrix .fill #0 
+R2_SAVE_Reset_Matrix .fill #0 
+R3_SAVE_Reset_Matrix .fill #0 
+R4_SAVE_Reset_Matrix .fill #0 
+R5_SAVE_Reset_Matrix .fill #0
+R6_SAVE_Reset_Matrix .fill #0 
+R7_SAVE_Reset_Matrix .fill #0 
+
+Reset_Matrix: ;gets matrix in R1  and print, R2=rows ,R3 =cols
+ST R0 R0_SAVE_Reset_Matrix
+ST R1 R1_SAVE_Reset_Matrix
+ST R2 R2_SAVE_Reset_Matrix
+ST R3 R3_SAVE_Reset_Matrix
+ST R4 R4_SAVE_Reset_Matrix 
+ST R5 R5_SAVE_Reset_Matrix
+ST R6 R6_SAVE_Reset_Matrix 
+ST R7 R7_SAVE_Reset_Matrix
+
+AND R0 R0 #0 ; Temp
+AND R4 R4 #0 ; Row index
+AND R5 R5 #0 ; col index
+AND R6 R6 #0 ; Temp
+
+FOR_ROWS_RESET: ;R4; 0<= row in Matrix < R2
+	;FOR_COLS_Reset:	;R5; 0<= col in Matrix < R3
+		;CALC R6=Matrix[row][col]; R6 = R1 + (col=R5) + (cols in matrix=R3)* (row=R4)
+		ADD R6 R1 R5	; R6 = address of Matrix + (col=R5)
+				
+		;MUL:R0*R1=R2 ; cols in matrix*row =R2 ; R3*R4 = R2
+		ADD R0 R3 #0	; R0 = R3=cols in matrix
+		ADD R1 R4 #0	; R1 = R4=row
+		AND R2 R2 #0 	; Temp
+		JSR Mul
+		ADD R6 R6 R2	; R6 hold the address of Matrix[R4][R5]
+		AND R0 R0 #0 
+		ADD R0 R0 #-1 
+		STR R0 R6 #0	; M[row=R4][col=R5]  = R0=-1
+		LD R1 R1_SAVE_Reset_Matrix
+		
+		COLS_COUNTER:
+		ADD R5 R5 #1
+		NOT R0 R5
+		ADD R0 R0 #1
+		LD R3 R3_SAVE_Reset_Matrix
+		ADD R0 R3 R0	; if(R5<R3)-> Countinue FOR_COLS_Print
+		BRz ROWS_COUNTER
+		BR FOR_ROWS_RESET
+		
+	ROWS_COUNTER:
+	AND R5 R5 #0 ; col index reset
+	ADD R4 R4 #1
+	NOT R0 R4
+	ADD R0 R0 #1
+	LD R2 R2_SAVE_Reset_Matrix 
+	ADD R0 R2 R0	; if(R5<R2)-> Countinue FOR_COLS_Print
+	BRz END_Reset_Matrix
+	BR FOR_ROWS_RESET 
+	
+END_Reset_Matrix:
+LD R0 R0_SAVE_Reset_Matrix
+LD R1 R1_SAVE_Reset_Matrix
+LD R2 R2_SAVE_Reset_Matrix
+LD R3 R3_SAVE_Reset_Matrix 
+LD R4 R4_SAVE_Reset_Matrix
+LD R5 R5_SAVE_Reset_Matrix
+LD R6 R6_SAVE_Reset_Matrix
+LD R7 R7_SAVE_Reset_Matrix
+Ret
+
+;********************************************************************;
+Matrix_Machine_Allocator: .blkw #6 #-1	
+Production_Matrix: .blkw #240 #-1
+Head .fill Item_1
+Item_1 	.fill #0
+	.fill #0
+	.fill Item_2
+Item_2 	.fill #0
+	.fill Item_1
+	.fill Item_3
+Item_3 	.fill #0
+	.fill Item_2
+	.fill Item_4
+Item_4	.fill #0
+	.fill Item_3
+	.fill Item_5	
+Item_5 	.fill #0
+	.fill Item_4
+	.fill Item_6
+Item_6	.fill #0
+	.fill Item_5
+	.fill Item_7
+Item_7	.fill #0
+	.fill Item_6
+	.fill Item_8
+Item_8	.fill #0
+	.fill Item_7
+	.fill Item_9	
+Item_9	.fill #0
+	.fill Item_8
+	.fill Item_10	
+Item_10 .fill #0
+	.fill Item_9
+	.fill Item_11
+Item_11 .fill #0
+	.fill Item_10
+	.fill Item_12
+Item_12 .fill #0
+	.fill Item_11
+	.fill Item_13		
+Item_13 .fill #0
+	.fill Item_12
+	.fill Item_14
+Item_14 .fill #0
+	.fill Item_13
+	.fill Item_15
+Item_15 .fill #0
+	.fill Item_14
+	.fill Item_16	
+Item_16 .fill #0
+	.fill Item_15
+	.fill Item_17
+Item_17 .fill #0
+	.fill Item_16
+	.fill Item_18
+Item_18 .fill #0
+	.fill Item_17
+	.fill Item_19	
+Item_19 .fill #0
+	.fill Item_18
+	.fill Item_20		
+Item_20 .fill #0
+	.fill Item_19
+	.fill Item_21
+Item_21 .fill #0
+	.fill Item_20
+	.fill Item_22
+Item_22 .fill #0
+	.fill Item_21
+	.fill Item_23	
+Item_23 .fill #0
+	.fill Item_22
+	.fill Item_24
+Item_24 .fill #0
+	.fill Item_23
+	.fill #0
+
+;.blkw #73 #-1 ; 24*3+1 for Head
+Array_Reset_Value:
+			.fill Item_1
+			.fill #0
+			.fill #0
+			.fill Item_2
+			.fill #0
+			.fill Item_1
+			.fill Item_3
+			.fill #0
+			.fill Item_2
+			.fill Item_4
+			.fill #0
+			.fill Item_3
+			.fill Item_5	
+			.fill #0
+			.fill Item_4
+			.fill Item_6
+			.fill #0
+			.fill Item_5
+			.fill Item_7
+			.fill #0
+			.fill Item_6
+			.fill Item_8
+			.fill #0
+			.fill Item_7
+			.fill Item_9	
+			.fill #0
+			.fill Item_8
+			.fill Item_10	
+			.fill #0
+			.fill Item_9
+			.fill Item_11
+			.fill #0
+			.fill Item_10
+			.fill Item_12
+			.fill #0
+			.fill Item_11
+			.fill Item_13		
+			.fill #0
+			.fill Item_12
+			.fill Item_14
+			.fill #0
+			.fill Item_13
+			.fill Item_15
+			.fill #0
+			.fill Item_14
+			.fill Item_16	
+			.fill #0
+			.fill Item_15
+			.fill Item_17
+			.fill #0
+			.fill Item_16
+			.fill Item_18
+			.fill #0
+			.fill Item_17
+			.fill Item_19	
+			.fill #0
+			.fill Item_18
+			.fill Item_20		
+			.fill #0
+			.fill Item_19
+			.fill Item_21
+			.fill #0
+			.fill Item_20
+			.fill Item_22
+			.fill #0
+			.fill Item_21
+			.fill Item_23	
+			.fill #0
+			.fill Item_22
+			.fill Item_24
+			.fill #0
+			.fill Item_23
+			.fill #0
+.END
